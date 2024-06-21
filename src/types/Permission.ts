@@ -1,5 +1,5 @@
-export interface PermissionT {
-    id: number;
+export interface IPermission {
+    id?: number;
     nombreEmpleado: string;
     apellidoEmpleado: string;
     tipoPermisoId: number;
