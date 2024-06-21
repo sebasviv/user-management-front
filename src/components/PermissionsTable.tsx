@@ -8,9 +8,10 @@ import EditIcon from '@mui/icons-material/Edit';
 interface IPermissionsTableProps {
     data: IPermission[];
     onDelete: (id: number) => void;
+    onEdit: (permission: IPermission) => void;
 }
 
-const PermissionsTable: React.FC<IPermissionsTableProps> = ({ data, onDelete }) => {
+const PermissionsTable: React.FC<IPermissionsTableProps> = ({ data, onDelete, onEdit }) => {
     return (
         <div>
             {
@@ -50,7 +51,9 @@ const PermissionsTable: React.FC<IPermissionsTableProps> = ({ data, onDelete }) 
                                         }}>
                                             <DeleteIcon />
                                         </IconButton>
-                                        <IconButton aria-label="delete">
+                                        <IconButton aria-label="delete" onClick={() => {
+                                            onEdit(row)
+                                        }}>
                                             <EditIcon />
                                         </IconButton>
                                     </TableCell>

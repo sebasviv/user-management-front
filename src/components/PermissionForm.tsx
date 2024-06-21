@@ -7,7 +7,6 @@ import {
     InputLabel,
     MenuItem,
     Select,
-    SelectChangeEvent,
 } from "@mui/material";
 import styled from "styled-components";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
@@ -16,22 +15,30 @@ import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { IPermission } from "../types/Permission";
 import { IPermissionTypes } from "../types/PermissionTypes";
 import { FieldValues, useForm } from "react-hook-form";
-import { PostPermission } from "../services/PermissionService";
+import { PostPermission, UpdatePermission } from "../services/PermissionService";
+import dayjs from "dayjs";
 
 interface IPermissionFormProps {
     permissionTypes: IPermissionTypes[];
     onUpdate: () => void;
+    data: IPermission | null;
 }
 
 
-const PermissionForm: React.FC<IPermissionFormProps> = ({ permissionTypes, onUpdate }) => {
+const PermissionForm: React.FC<IPermissionFormProps> = ({ permissionTypes, onUpdate, data }) => {
     const {
         register,
         handleSubmit,
         reset,
         formState: { errors },
     } = useForm();
-    const [permissionSelected, setPermissionSelected] = React.useState(1);
+    const [permissionSelected, setPermissionSelected] = React.useState<IPermission>({
+        nombreEmpleado: "",
+        apellidoEmpleado: "",
+        tipoPermisoId: 1,
+        fechaPermiso: new Date(),
+    });
+
     const [feedBackMessage, setFeedBackMessage] = React.useState({
         message: "",
         severity: "",
@@ -45,9 +52,18 @@ const PermissionForm: React.FC<IPermissionFormProps> = ({ permissionTypes, onUpd
         }, 5000);
     }, [feedBackMessage]);
 
-    const handleChange = (event: SelectChangeEvent<number>) => {
-        setPermissionSelected(event.target.value as number);
-    };
+    useEffect(() => {
+        if (data) {
+            setPermissionSelected(data);
+        }else {
+            setPermissionSelected({
+                nombreEmpleado: "",
+                apellidoEmpleado: "",
+                tipoPermisoId: 1,
+                fechaPermiso: new Date(),
+            });
+        }
+    }, [data])
 
     const createPermission = (permission: IPermission) => {
         PostPermission(permission).then((response) => {
@@ -66,6 +82,22 @@ const PermissionForm: React.FC<IPermissionFormProps> = ({ permissionTypes, onUpd
         });
     };
 
+    const EditPermission = (permission: IPermission) => {
+        UpdatePermission(permission).then((response) => {
+            setFeedBackMessage({
+                message: "Permiso actualizado correctamente",
+                severity: "success",
+            });
+            reset();
+            onUpdate();
+        }).catch((error) => {
+            setFeedBackMessage({
+                message: "Error al actualizar el permiso" + error.message,
+                severity: "error",
+            });
+        });
+    }
+
     const handleSubmitForm = (data: FieldValues) => {
         const permission: IPermission = {
             nombreEmpleado: data.nombreEmpleado,
@@ -74,7 +106,17 @@ const PermissionForm: React.FC<IPermissionFormProps> = ({ permissionTypes, onUpd
             fechaPermiso: new Date(data.fechaPermiso),
         };
 
-        createPermission(permission);
+        if (permissionSelected.id) {
+            permission.id = permissionSelected.id;
+            permission.fechaPermiso = data.fechaPermiso ? new Date(data.fechaPermiso) : permissionSelected.fechaPermiso;
+            EditPermission(permission);
+
+        }
+
+        if (!permission.id) {
+            createPermission(permission);
+        }
+
     };
     return (
         <div style={{ width: "100%" }}>
@@ -86,7 +128,14 @@ const PermissionForm: React.FC<IPermissionFormProps> = ({ permissionTypes, onUpd
                         label="Nombre del empleado"
                         variant="outlined"
                         sx={{ width: "100%" }}
-                        inputProps={{ ...register("nombreEmpleado", { required: true }) }}
+                        inputProps={{ ...register("nombreEmpleado", { required: true}) }}
+                        value={permissionSelected.nombreEmpleado}
+                        onChange={(e) => {
+                            setPermissionSelected({
+                                ...permissionSelected,
+                                nombreEmpleado: e.target.value,
+                            });
+                        }}
                     />
                     <Textfield
                         id="outlined-basic"
@@ -96,6 +145,13 @@ const PermissionForm: React.FC<IPermissionFormProps> = ({ permissionTypes, onUpd
                         inputProps={{
                             ...register("apellidoEmpleado", { required: true }),
                         }}
+                        value={permissionSelected.apellidoEmpleado}
+                        onChange={(e) => {
+                            setPermissionSelected({
+                                ...permissionSelected,
+                                apellidoEmpleado: e.target.value,
+                            });
+                        }}
                     />
                     <InputLabel id="demo-simple-select-label">
                         Tipo de permiso
@@ -104,11 +160,16 @@ const PermissionForm: React.FC<IPermissionFormProps> = ({ permissionTypes, onUpd
                         sx={{ width: "100%" }}
                         labelId="demo-simple-select-label"
                         id="demo-simple-select"
-                        value={permissionSelected}
+                        value={permissionSelected.tipoPermisoId}
                         label="Age"
-                        onChange={(val) => handleChange(val)}
                         autoWidth={true}
                         inputProps={{ ...register("tipoPermisoId", { required: true }) }}
+                        onChange={(e) => {
+                            setPermissionSelected({
+                                ...permissionSelected,
+                                tipoPermisoId: e.target.value as number,
+                            });
+                        }}
                     >
                         {permissionTypes.length > 0 &&
                             permissionTypes.map((permission) => (
@@ -125,10 +186,13 @@ const PermissionForm: React.FC<IPermissionFormProps> = ({ permissionTypes, onUpd
                                     value: date?.format("YYYY-MM-DD"),
                                 });
                             }}
+                            value={dayjs(permissionSelected.fechaPermiso)}
                         />
                     </LocalizationProvider>
                     <Button variant="contained" type="submit">
-                        Aceptar
+                        {
+                            permissionSelected.id ? "Actualizar Permiso" : "Crear Permiso"
+                        }
                     </Button>
                 </PermissionFormContainer>
             </form>

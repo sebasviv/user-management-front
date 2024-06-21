@@ -14,6 +14,7 @@ function App() {
 
   const [permissions, setPermissions] = useState<IPermission[]>([]);
   const [permissionTypes, setPermissionTypes] = useState<IPermissionTypes[]>([]);
+  const [permissionToEdit, setPermissionToEdit] = useState<IPermission | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -34,6 +35,7 @@ function App() {
 
   const handleUpdate = () => {
     setIsLoading(true);
+    setPermissionToEdit(null);
     GetPermissions().then((data) => {
       setPermissions(data);
       setIsLoading(false);
@@ -48,16 +50,19 @@ function App() {
         setIsLoading(false);
       });
     });
+  }
 
+  const handleEdit = (permission: IPermission) => {
+    setPermissionToEdit(permission);
   }
 
   return (
 
     <Container>
       <div>Requerir Permiso</div>
-      <PermissionForm permissionTypes={permissionTypes} onUpdate={handleUpdate} />
+      <PermissionForm permissionTypes={permissionTypes} onUpdate={handleUpdate} data={permissionToEdit}/>
       <div> Tabla de Permisos</div>
-      <PermissionsTable data={permissions} onDelete={handleDelete} />
+      <PermissionsTable data={permissions} onDelete={handleDelete} onEdit={handleEdit}/>
       {
         isLoading && <Box
           sx={{
