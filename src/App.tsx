@@ -59,7 +59,6 @@ function App() {
   return (
 
     <Container>
-      <div>Requerir Permiso</div>
       <PermissionForm permissionTypes={permissionTypes} onUpdate={handleUpdate} data={permissionToEdit}/>
       <div> Tabla de Permisos</div>
       <PermissionsTable data={permissions} onDelete={handleDelete} onEdit={handleEdit}/>
@@ -87,4 +86,5 @@ const Container = styled.div`
   align-items: center;
   justify-content: center;
   width: 100%;
+  gap: 1rem;
 `;

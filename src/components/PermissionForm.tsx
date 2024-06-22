@@ -14,7 +14,7 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { IPermission } from "../types/Permission";
 import { IPermissionTypes } from "../types/PermissionTypes";
-import { FieldValues, useForm } from "react-hook-form";
+import { Controller, FieldValues, useForm } from "react-hook-form";
 import { PostPermission, UpdatePermission } from "../services/PermissionService";
 import dayjs from "dayjs";
 
@@ -30,14 +30,16 @@ const PermissionForm: React.FC<IPermissionFormProps> = ({ permissionTypes, onUpd
         register,
         handleSubmit,
         reset,
+        setValue,
+        control,
         formState: { errors },
     } = useForm();
-    const [permissionSelected, setPermissionSelected] = React.useState<IPermission>({
-        nombreEmpleado: "",
-        apellidoEmpleado: "",
-        tipoPermisoId: 1,
-        fechaPermiso: new Date(),
-    });
+    // const [permissionSelected, setPermissionSelected] = React.useState<IPermission>({
+    //     nombreEmpleado: "",
+    //     apellidoEmpleado: "",
+    //     tipoPermisoId: 1,
+    //     fechaPermiso: new Date(),
+    // });
 
     const [feedBackMessage, setFeedBackMessage] = React.useState({
         message: "",
@@ -53,21 +55,29 @@ const PermissionForm: React.FC<IPermissionFormProps> = ({ permissionTypes, onUpd
     }, [feedBackMessage]);
 
     useEffect(() => {
+        // if (data) {
+        //     setPermissionSelected(data);
+        // }else {
+        //     setPermissionSelected({
+        //         nombreEmpleado: "",
+        //         apellidoEmpleado: "",
+        //         tipoPermisoId: 1,
+        //         fechaPermiso: new Date(),
+        //     });
+        // }
+
         if (data) {
-            setPermissionSelected(data);
-        }else {
-            setPermissionSelected({
-                nombreEmpleado: "",
-                apellidoEmpleado: "",
-                tipoPermisoId: 1,
-                fechaPermiso: new Date(),
-            });
+            setValue("nombreEmpleado", data.nombreEmpleado);
+            setValue("apellidoEmpleado", data.apellidoEmpleado);
+            setValue("tipoPermisoId", data.tipoPermisoId);
+            setValue("fechaPermiso", dayjs(data.fechaPermiso));
+        } else {
+            reset();
         }
-    }, [data])
+    }, [data, setValue, reset])
 
     const createPermission = (permission: IPermission) => {
         PostPermission(permission).then((response) => {
-            console.log("response", response)
             setFeedBackMessage({
                 message: "Permiso creado correctamente",
                 severity: "success",
@@ -106,92 +116,93 @@ const PermissionForm: React.FC<IPermissionFormProps> = ({ permissionTypes, onUpd
             fechaPermiso: new Date(data.fechaPermiso),
         };
 
-        if (permissionSelected.id) {
-            permission.id = permissionSelected.id;
-            permission.fechaPermiso = data.fechaPermiso ? new Date(data.fechaPermiso) : permissionSelected.fechaPermiso;
+        if (data.id) {
+            permission.id = data.id;
             EditPermission(permission);
-
         }
 
-        if (!permission.id) {
+        if (!data.id) {
             createPermission(permission);
         }
-
     };
     return (
         <div style={{ width: "100%" }}>
-
+            <div>{data ? 'EDITAR PERMISO' : 'CREAR PERMISO'}</div>
             <form onSubmit={handleSubmit((data) => handleSubmitForm(data))}>
                 <PermissionFormContainer>
-                    <Textfield
-                        id="outlined-basic"
-                        label="Nombre del empleado"
-                        variant="outlined"
-                        sx={{ width: "100%" }}
-                        inputProps={{ ...register("nombreEmpleado", { required: true}) }}
-                        value={permissionSelected.nombreEmpleado}
-                        onChange={(e) => {
-                            setPermissionSelected({
-                                ...permissionSelected,
-                                nombreEmpleado: e.target.value,
-                            });
-                        }}
+                    <Controller
+                        name="nombreEmpleado"
+                        control={control}
+                        rules={{ required: true }}
+                        defaultValue={""}
+                        render={({ field }) => (
+                            <Textfield
+                                {...field}
+                                label="Nombre del empleado"
+                                variant="outlined"
+                                sx={{ width: "100%" }}
+                                error={!!errors.nombreEmpleado}
+                                helperText={errors.nombreEmpleado ? "Campo requerido" : ""}
+                            />
+                        )}
                     />
-                    <Textfield
-                        id="outlined-basic"
-                        label="Apellido del empleado"
-                        variant="outlined"
-                        sx={{ width: "100%" }}
-                        inputProps={{
-                            ...register("apellidoEmpleado", { required: true }),
-                        }}
-                        value={permissionSelected.apellidoEmpleado}
-                        onChange={(e) => {
-                            setPermissionSelected({
-                                ...permissionSelected,
-                                apellidoEmpleado: e.target.value,
-                            });
-                        }}
+                    <Controller
+                        name="apellidoEmpleado"
+                        control={control}
+                        rules={{ required: true }}
+                        defaultValue={""}
+                        render={({ field }) => (
+                            <Textfield
+                                {...field}
+                                label="Apellido del empleado"
+                                variant="outlined"
+                                sx={{ width: "100%" }}
+                                error={!!errors.apellidoEmpleado}
+                                helperText={errors.apellidoEmpleado ? "Campo requerido" : ""}
+                            />
+                        )}
                     />
                     <InputLabel id="demo-simple-select-label">
                         Tipo de permiso
                     </InputLabel>
-                    <Select
-                        sx={{ width: "100%" }}
-                        labelId="demo-simple-select-label"
-                        id="demo-simple-select"
-                        value={permissionSelected.tipoPermisoId}
-                        label="Age"
-                        autoWidth={true}
-                        inputProps={{ ...register("tipoPermisoId", { required: true }) }}
-                        onChange={(e) => {
-                            setPermissionSelected({
-                                ...permissionSelected,
-                                tipoPermisoId: e.target.value as number,
-                            });
-                        }}
-                    >
-                        {permissionTypes.length > 0 &&
-                            permissionTypes.map((permission) => (
-                                <MenuItem key={permission.id} value={permission.id}>
-                                    {permission.description}
-                                </MenuItem>
-                            ))}
-                    </Select>
+                    <Controller
+                        name="tipoPermisoId"
+                        control={control}
+                        defaultValue=""
+                        rules={{ required: true }}
+                        render={({ field }) => (
+                            <Select
+                                {...field}
+                                sx={{ width: "100%" }}
+                                labelId="demo-simple-select-label"
+                                id="demo-simple-select"
+                            >
+                                {permissionTypes.length > 0 &&
+                                    permissionTypes.map((permission) => (
+                                        <MenuItem key={permission.id} value={permission.id}>
+                                            {permission.description}
+                                        </MenuItem>
+                                    ))}
+                            </Select>
+                        )}
+                    />
                     <LocalizationProvider dateAdapter={AdapterDayjs}>
-                        <DatePicker
-                            sx={{ width: "100%" }}
-                            onChange={(date) => {
-                                register("fechaPermiso", {
-                                    value: date?.format("YYYY-MM-DD"),
-                                });
-                            }}
-                            value={dayjs(permissionSelected.fechaPermiso)}
+                        <Controller
+                            name="fechaPermiso"
+                            control={control}
+                            defaultValue={dayjs()}
+                            render={({ field }) => (
+                                <DatePicker
+                                    {...field}
+                                    sx={{ width: "100%" }}
+                                    onChange={(date) => field.onChange(date?.format("YYYY-MM-DD"))}
+                                />
+                            )}
                         />
                     </LocalizationProvider>
                     <Button variant="contained" type="submit">
                         {
-                            permissionSelected.id ? "Actualizar Permiso" : "Crear Permiso"
+                            data ? "Actualizar Permiso" : "Crear Permiso"
                         }
                     </Button>
                 </PermissionFormContainer>
