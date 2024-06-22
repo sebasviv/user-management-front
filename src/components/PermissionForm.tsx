@@ -27,24 +27,18 @@ interface IPermissionFormProps {
 
 const PermissionForm: React.FC<IPermissionFormProps> = ({ permissionTypes, onUpdate, data }) => {
     const {
-        register,
         handleSubmit,
         reset,
         setValue,
         control,
         formState: { errors },
     } = useForm();
-    // const [permissionSelected, setPermissionSelected] = React.useState<IPermission>({
-    //     nombreEmpleado: "",
-    //     apellidoEmpleado: "",
-    //     tipoPermisoId: 1,
-    //     fechaPermiso: new Date(),
-    // });
 
     const [feedBackMessage, setFeedBackMessage] = React.useState({
         message: "",
         severity: "",
     });
+
     useEffect(() => {
         setTimeout(() => {
             setFeedBackMessage({
@@ -55,17 +49,6 @@ const PermissionForm: React.FC<IPermissionFormProps> = ({ permissionTypes, onUpd
     }, [feedBackMessage]);
 
     useEffect(() => {
-        // if (data) {
-        //     setPermissionSelected(data);
-        // }else {
-        //     setPermissionSelected({
-        //         nombreEmpleado: "",
-        //         apellidoEmpleado: "",
-        //         tipoPermisoId: 1,
-        //         fechaPermiso: new Date(),
-        //     });
-        // }
-
         if (data) {
             setValue("nombreEmpleado", data.nombreEmpleado);
             setValue("apellidoEmpleado", data.apellidoEmpleado);
@@ -108,20 +91,20 @@ const PermissionForm: React.FC<IPermissionFormProps> = ({ permissionTypes, onUpd
         });
     }
 
-    const handleSubmitForm = (data: FieldValues) => {
+    const handleSubmitForm = (fieldValues: FieldValues) => {
         const permission: IPermission = {
-            nombreEmpleado: data.nombreEmpleado,
-            apellidoEmpleado: data.apellidoEmpleado,
-            tipoPermisoId: data.tipoPermisoId,
-            fechaPermiso: new Date(data.fechaPermiso),
+            nombreEmpleado: fieldValues.nombreEmpleado,
+            apellidoEmpleado: fieldValues.apellidoEmpleado,
+            tipoPermisoId: fieldValues.tipoPermisoId,
+            fechaPermiso: new Date(fieldValues.fechaPermiso),
         };
 
-        if (data.id) {
+        if (data) {
             permission.id = data.id;
             EditPermission(permission);
         }
 
-        if (!data.id) {
+        if (!data) {
             createPermission(permission);
         }
     };
@@ -190,12 +173,12 @@ const PermissionForm: React.FC<IPermissionFormProps> = ({ permissionTypes, onUpd
                         <Controller
                             name="fechaPermiso"
                             control={control}
-                            defaultValue={dayjs()}
+                            defaultValue={dayjs(new Date())}
                             render={({ field }) => (
                                 <DatePicker
                                     {...field}
                                     sx={{ width: "100%" }}
-                                    onChange={(date) => field.onChange(date?.format("YYYY-MM-DD"))}
+                                    onChange={(date) => field.onChange(date)}
                                 />
                             )}
                         />
